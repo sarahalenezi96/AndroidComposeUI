@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">AndroidComposeUI</string>
+    <string name="app_name">Quiz</string>
+
+    <string-array name="questions">
+        <item>Android is an operating system.</item>
+        <item>val is modifiable</item>
+        <item>Kotlin is officially supported for Android development.</item>
+        <item>A mutableListOf states can be accessed and modified directly</item>
+    </string-array>
+
+    <string name="true_option">True</string>
+    <string name="false_option">False</string>
+    <string name="next_question">Next Question</string>
+    <string name="submit_button">Submit</string>
+    <string name="restart_game">Restart Game</string>
+    <string name="your_score">Your Score: %1$d/%2$d</string>
+
 </resources>
