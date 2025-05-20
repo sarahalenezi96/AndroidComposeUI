@@ -1,5 +1,9 @@
 package com.coded.androidcomposeui
 
+import android.media.MediaPlayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,13 +42,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-@Composable
+}@Composable
 fun QuizGame(modifier: Modifier = Modifier) {
     var currentQuestion by remember { mutableStateOf(0) }
     var showResult by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
     var score by remember { mutableStateOf(0) }
+
+    val context = LocalContext.current
+
+    fun playSound(resId: Int) {
+        val mediaPlayer = MediaPlayer.create(context, resId)
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener {
+            it.release()
+        }
+    }
 
     val questions = stringArrayResource(id = R.array.questions)
     val questionAnswers = listOf(true, false, true, false)
@@ -52,111 +65,153 @@ fun QuizGame(modifier: Modifier = Modifier) {
     val currentText = questions.getOrNull(currentQuestion)
     val correctAnswer = questionAnswers.getOrNull(currentQuestion)
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        if (currentText != null && correctAnswer != null) {
-            Text(
-                text = currentText,
-                fontSize = 25.sp,
-                lineHeight = 30.sp,
-                modifier = Modifier.padding(top = 32.dp),
-                textAlign = TextAlign.Center
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (currentText != null && correctAnswer != null) {
+                Text(
+                    text = currentText,
+                    fontSize = 25.sp,
+                    lineHeight = 30.sp,
+                    color = Color(0xFF1A237E),
+                    modifier = Modifier.padding(top = 32.dp),
+                    textAlign = TextAlign.Center
+                )
 
-            if (showResult) {
-                AnswerResultCircle(isCorrect = isCorrect ?: false)
+                if (showResult) {
+                    AnswerResultCircle(isCorrect = isCorrect ?: false)
 
-                val isLastQuestion = currentQuestion == questions.lastIndex
+                    val isLastQuestion = currentQuestion == questions.lastIndex
 
-                Button(onClick = {
-                    if (isLastQuestion) {
-                        currentQuestion++
-                    } else {
-                        currentQuestion++
+                    Button(
+                        onClick = {
+                            currentQuestion++
+                            showResult = false
+                            isCorrect = null
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text(
+                            text = if (isLastQuestion)
+                                stringResource(id = R.string.submit_button)
+                            else
+                                stringResource(id = R.string.next_question),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
                     }
-                    showResult = false
-                    isCorrect = null
-                }) {
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(
+                            onClick = {
+                                isCorrect = true == correctAnswer
+                                if (isCorrect == true) {
+                                    playSound(R.raw.correct)
+                                    score++
+                                } else {
+                                    playSound(R.raw.wrong)
+                                }
+                                showResult = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                stringResource(id = R.string.true_option),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(15.dp))
+
+                        Button(
+                            onClick = {
+                                isCorrect = false == correctAnswer
+                                if (isCorrect == true) {
+                                    playSound(R.raw.correct)
+                                    score++
+                                } else {
+                                    playSound(R.raw.wrong)
+                                }
+                                showResult = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(
+                                stringResource(id = R.string.false_option),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        }
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        if (isLastQuestion)
-                            stringResource(id = R.string.submit_button)
-                        else
-                            stringResource(id = R.string.next_question),
+                        text = stringResource(id = R.string.your_score, score, questions.size),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp,
+                        color = Color(0xFF1A237E),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        currentQuestion = 0
+                        score = 0
+                        showResult = false
+                        isCorrect = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        stringResource(id = R.string.restart_game),
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
                 }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        onClick = {
-                            isCorrect = true == correctAnswer
-                            if (isCorrect == true) score++
-                            showResult = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            stringResource(id = R.string.true_option),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Button(
-                        onClick = {
-                            isCorrect = false == correctAnswer
-                            if (isCorrect == true) score++
-                            showResult = true
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            stringResource(id = R.string.false_option),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    }
-                }
-            }
-        } else {
-            Text(
-                text = stringResource(id = R.string.your_score, score, questions.size),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            Button(onClick = {
-                currentQuestion = 0
-                score = 0
-                showResult = false
-                isCorrect = null
-            }) {
-                Text(
-                    stringResource(id = R.string.restart_game),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
             }
         }
     }
 }
 
+
 @Composable
 fun AnswerResultCircle(isCorrect: Boolean) {
-    val backgroundColor = if (isCorrect) Color.Green else Color.Red
+    val backgroundColor = MaterialTheme.colorScheme.primary
     val resultText = if (isCorrect) "Correct Answer" else "Wrong Answer"
+    val imageRes = if (isCorrect) R.drawable.correct_answer else R.drawable.wrong_answer
 
     Box(
         modifier = Modifier
@@ -165,14 +220,26 @@ fun AnswerResultCircle(isCorrect: Boolean) {
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = resultText,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = Color.Black
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = resultText,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color.White
+            )
+        }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
