@@ -42,12 +42,14 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}@Composable
+}
+var score =0
+
+@Composable
 fun QuizGame(modifier: Modifier = Modifier) {
     var currentQuestion by remember { mutableStateOf(0) }
     var showResult by remember { mutableStateOf(false) }
     var isCorrect by remember { mutableStateOf<Boolean?>(null) }
-    var score by remember { mutableStateOf(0) }
 
     val context = LocalContext.current
 
@@ -186,9 +188,9 @@ fun QuizGame(modifier: Modifier = Modifier) {
                 Button(
                     onClick = {
                         currentQuestion = 0
-                        score = 0
                         showResult = false
                         isCorrect = null
+                        score = 0
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
